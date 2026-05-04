@@ -1,0 +1,9 @@
+{
+  "installCommand": "npm install",
+  "crons": [
+    {
+      "path": "/api/cron/agents",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}
