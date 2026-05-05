@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String        @id @default(cuid())
+  email          String        @unique
+  password       String
+  name           String?
+  role           String        @default("member") // owner | admin | member
+  emailVerified  Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  orgId          String?
+  organization   Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  sessions       Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Organization {
+  id              String            @id @default(cuid())
+  name            String
+  slug            String            @unique
+  industry        String?
+  size            String?           // 1-10, 11-50, 51-200, 200+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  users           User[]
+  agents          Agent[]
+  integrations    Integration[]
+  subscription    Subscription?
+  emailLogs       EmailLog[]
+  extractionRules ExtractionRule[]
+}
+
+// Règles d'extraction automatique d'emails
+model ExtractionRule {
+  id          String       @id @default(cuid())
+  name        String
+  enabled     Boolean      @default(true)
+  keywords    String       @default("[]") // JSON array de mots-clés (sujet)
+  fromFilter  String?
+  categories  String       @default("[]") // JSON array
+  dateFrom    DateTime?
+  dateTo      DateTime?
+  outputName  String       @default("extraction")
+  columns     String       @default("[]") // JSON array de colonnes
+  lastRunAt   DateTime?
+  lastCount   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  orgId       String
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+model Agent {
+  id           String       @id @default(cuid())
+  name         String
+  type         String       // email | slack | notion | calendar | lead | support
+  description  String
+  enabled      Boolean      @default(false)
+  config       String       @default("{}") // JSON string
+  model        String       @default("gpt-4o")
+  systemPrompt String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  orgId        String
+  org          Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  runs         AgentRun[]
+}
+
+model AgentRun {
+  id         String   @id @default(cuid())
+  agentId    String
+  status     String   // running | success | error
+  input      String?
+  output     String?
+  tokensUsed Int      @default(0)
+  durationMs Int      @default(0)
+  createdAt  DateTime @default(now())
+  agent      Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+model Integration {
+  id           String       @id @default(cuid())
+  type         String       // gmail | outlook | slack | notion
+  name         String
+  connected    Boolean      @default(false)
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  scopes       String?
+  metadata     String       @default("{}") // JSON string
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  orgId        String
+  org          Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, type])
+}
+
+model Subscription {
+  id                 String       @id @default(cuid())
+  plan               String       @default("free") // free | starter | pro | enterprise
+  status             String       @default("active") // active | past_due | canceled | trialing
+  stripeCustomerId   String?      @unique
+  stripeSubId        String?      @unique
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean      @default(false)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  orgId              String       @unique
+  org                Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+model EmailLog {
+  id         String       @id @default(cuid())
+  gmailId    String?      // Gmail message ID (pour éviter les doublons)
+  threadId   String?
+  subject    String?
+  from       String?
+  to         String?
+  body       String?      // Corps du mail (tronqué)
+  action     String       // categorized | replied | archived
+  category   String?      // support | commercial | urgent | newsletter | other
+  priority   String?      // high | medium | low
+  summary    String?      // Résumé généré par GPT
+  aiReply    String?      // Réponse suggérée par GPT
+  aiResponse String?      // Réponse brute GPT (JSON)
+  replied    Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  orgId      String
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, gmailId])
+}

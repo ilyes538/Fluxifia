@@ -1,4 +1,4 @@
-# Novea SaaS — Guide de démarrage rapide
+# SortAI SaaS — Guide de démarrage rapide
 
 ## Prérequis
 - Node.js 20+
@@ -7,7 +7,7 @@
 ## Installation
 
 ```bash
-cd novea-saas
+cd sortai
 pnpm install
 ```
 
