@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "npm@10.9.2",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
@@ -29,6 +29,7 @@
     "openai": "^6.32.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
+    "recharts": "^3.8.1",
     "stripe": "^17.7.0",
     "tailwind-merge": "^3.3.0",
     "xlsx": "^0.18.5",

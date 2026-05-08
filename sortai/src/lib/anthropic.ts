@@ -17,8 +17,33 @@ export interface AgentRunResult {
 }
 
 export async function runAgent(params: AgentRunInput): Promise<AgentRunResult> {
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const start = Date.now();
+
+  // Mode dev mock : pas de clé API = réponse fake gratuite
+  const apiKey = process.env.OPENAI_API_KEY ?? "";
+  const isMock = !apiKey || apiKey.includes("fakekey") || apiKey.includes("localdev") || apiKey.startsWith("sk-test");
+  if (isMock) {
+    const mockReplies: Record<AgentType, string> = {
+      email: JSON.stringify({
+        category: "commercial",
+        priority: "medium",
+        summary: "Email de test traité en mode développement (aucune clé API configurée).",
+        suggestedReply: "Bonjour,\n\nMerci pour votre message. Nous vous recontacterons dans les plus brefs délais.\n\nCordialement,\nL'équipe"
+      }),
+      slack: "Réponse Slack mock (mode dev)",
+      notion: "Résumé Notion mock (mode dev)",
+      calendar: "Proposition de créneau mock (mode dev)",
+      lead: "Lead qualifié : score 7/10 (mode dev)",
+      support: "Solution suggérée : redémarrer l'application (mode dev)",
+    };
+    return {
+      output: mockReplies[params.type] ?? mockReplies.email,
+      tokensUsed: 0,
+      durationMs: Date.now() - start,
+    };
+  }
+
+  const openai = new OpenAI({ apiKey });
 
   const defaultPrompts: Record<AgentType, string> = {
     email: `Tu es un assistant IA spécialisé dans le traitement des emails professionnels pour une PME.

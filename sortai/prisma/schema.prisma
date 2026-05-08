@@ -44,6 +44,7 @@ model Organization {
   subscription    Subscription?
   emailLogs       EmailLog[]
   extractionRules ExtractionRule[]
+  reports         Report[]
 }
 
 // Règles d'extraction automatique d'emails
@@ -83,15 +84,16 @@ model Agent {
 }
 
 model AgentRun {
-  id         String   @id @default(cuid())
-  agentId    String
-  status     String   // running | success | error
-  input      String?
-  output     String?
-  tokensUsed Int      @default(0)
-  durationMs Int      @default(0)
-  createdAt  DateTime @default(now())
-  agent      Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  agentId     String
+  status      String   // running | success | error
+  input       String?
+  output      String?
+  tokensUsed  Int      @default(0)
+  creditsUsed Int      @default(0)
+  durationMs  Int      @default(0)
+  createdAt   DateTime @default(now())
+  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
 }
 
 model Integration {
@@ -104,6 +106,7 @@ model Integration {
   expiresAt    DateTime?
   scopes       String?
   metadata     String       @default("{}") // JSON string
+  gmailEmail   String?      // Adresse Gmail associée (pour détecter changement de compte)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   orgId        String
@@ -127,6 +130,19 @@ model Subscription {
   org                Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 }
 
+model Report {
+  id          String   @id @default(cuid())
+  orgId       String
+  period      String
+  totalEmails Int
+  stats       String   @default("{}")
+  summary     String
+  content     String
+  tokenCost   Int      @default(0)
+  createdAt   DateTime @default(now())
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
 model EmailLog {
   id         String       @id @default(cuid())
   gmailId    String?      // Gmail message ID (pour éviter les doublons)
@@ -134,7 +150,8 @@ model EmailLog {
   subject    String?
   from       String?
   to         String?
-  body       String?      // Corps du mail (tronqué)
+  body       String?      // Corps texte brut
+  bodyHtml   String?      // Corps HTML
   action     String       // categorized | replied | archived
   category   String?      // support | commercial | urgent | newsletter | other
   priority   String?      // high | medium | low

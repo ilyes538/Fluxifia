@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getValidAccessToken } from "@/lib/oauth";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -25,6 +26,8 @@ export async function POST(req: NextRequest) {
   if (!integration?.accessToken) {
     return NextResponse.json({ error: "Gmail non connecté" }, { status: 400 });
   }
+
+  const accessToken = await getValidAccessToken(integration.id);
 
   // Build RFC 2822 message
   const replyTo = emailLog.from ?? "";
@@ -51,7 +54,7 @@ export async function POST(req: NextRequest) {
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${integration.accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

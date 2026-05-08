@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         name,
         email: normalizedEmail,
         password: hashedPassword,
-        role: "owner",
+        role: "member",
         orgId: newOrg.id,
       },
     });

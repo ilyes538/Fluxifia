@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getMonthlyTokensUsed, getOrgPlan, PLAN_LIMITS } from "@/lib/limits";
+import { getMonthlyCreditsUsed, getOrgPlan, PLAN_LIMITS } from "@/lib/limits";
 import { prisma } from "@/lib/db";
 import { Zap, Mail, Bot, TrendingUp } from "lucide-react";
 import Link from "next/link";
@@ -13,33 +13,31 @@ export default async function UsagePage() {
 
   const plan = await getOrgPlan(orgId);
   const limits = PLAN_LIMITS[plan];
-  const tokensUsed = await getMonthlyTokensUsed(orgId);
+  const creditsUsed = await getMonthlyCreditsUsed(orgId);
 
   const start = new Date();
   start.setDate(1);
   start.setHours(0, 0, 0, 0);
 
   const [emailsProcessed, agentRuns, activeAgents, agentRunsByType] = await Promise.all([
-    prisma.emailLog.count({ where: { orgId, createdAt: { gte: start } } }),
+    prisma.report.count({ where: { orgId, createdAt: { gte: start } } }),
     prisma.agentRun.count({ where: { agent: { orgId }, createdAt: { gte: start } } }),
     prisma.agent.count({ where: { orgId, enabled: true } }),
     prisma.agentRun.groupBy({
       by: ["agentId"],
       where: { agent: { orgId }, createdAt: { gte: start } },
       _count: { id: true },
-      _sum: { tokensUsed: true },
+      _sum: { creditsUsed: true },
     }),
   ]);
 
-  const tokensLimit = limits.tokensPerMonth;
-  const tokensPercent = tokensLimit === Infinity ? 0 : Math.min(100, Math.round((tokensUsed / tokensLimit) * 100));
-  const emailsLimit = limits.emailsPerMonth;
-  const emailsPercent = emailsLimit === Infinity ? 0 : Math.min(100, Math.round((emailsProcessed / emailsLimit) * 100));
+  const creditsLimit = limits.creditsPerMonth;
+  const creditsPercent = creditsLimit === Infinity ? 0 : Math.min(100, Math.round((creditsUsed / creditsLimit) * 100));
 
   const agentDetails = await Promise.all(
     agentRunsByType.map(async (r) => {
       const agent = await prisma.agent.findUnique({ where: { id: r.agentId }, select: { name: true, type: true } });
-      return { ...agent, runs: r._count.id, tokens: r._sum.tokensUsed ?? 0 };
+      return { ...agent, runs: r._count.id, credits: r._sum.creditsUsed ?? 0 };
     })
   );
 
@@ -54,27 +52,27 @@ export default async function UsagePage() {
 
       {/* Usage bars */}
       <div className="grid md:grid-cols-2 gap-4">
-        {/* Tokens */}
+        {/* Credits */}
         <div className="card space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Zap size={16} style={{ color: "var(--accent-light)" }} />
-              <span className="font-medium text-sm">Tokens IA</span>
+              <span className="font-medium text-sm">Crédits utilisés</span>
             </div>
             <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-              {tokensUsed.toLocaleString("fr-FR")} / {tokensLimit === Infinity ? "∞" : tokensLimit.toLocaleString("fr-FR")}
+              {creditsUsed.toLocaleString("fr-FR")} / {creditsLimit === Infinity ? "∞" : creditsLimit.toLocaleString("fr-FR")}
             </span>
           </div>
           <div className="w-full h-2 rounded-full" style={{ background: "rgba(255,255,255,0.1)" }}>
             <div
               className="h-2 rounded-full transition-all"
               style={{
-                width: `${tokensPercent}%`,
-                background: tokensPercent > 80 ? "#ef4444" : tokensPercent > 60 ? "#f59e0b" : "var(--accent)",
+                width: `${creditsPercent}%`,
+                background: creditsPercent > 80 ? "#ef4444" : creditsPercent > 60 ? "#f59e0b" : "var(--accent)",
               }}
             />
           </div>
-          <p className="text-xs" style={{ color: "var(--text-muted)" }}>{tokensPercent}% utilisé</p>
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>{creditsPercent}% utilisé</p>
         </div>
 
         {/* Emails */}
@@ -82,22 +80,14 @@ export default async function UsagePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Mail size={16} style={{ color: "var(--green)" }} />
-              <span className="font-medium text-sm">Emails traités</span>
+              <span className="font-medium text-sm">Rapports générés</span>
             </div>
             <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-              {emailsProcessed} / {emailsLimit === Infinity ? "∞" : emailsLimit}
+              {emailsProcessed}
             </span>
           </div>
-          <div className="w-full h-2 rounded-full" style={{ background: "rgba(255,255,255,0.1)" }}>
-            <div
-              className="h-2 rounded-full transition-all"
-              style={{
-                width: `${emailsPercent}%`,
-                background: emailsPercent > 80 ? "#ef4444" : "var(--green)",
-              }}
-            />
-          </div>
-          <p className="text-xs" style={{ color: "var(--text-muted)" }}>{emailsPercent}% utilisé</p>
+          <div className="text-3xl font-bold">{emailsProcessed}</div>
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>rapports ce mois</p>
         </div>
 
         {/* Agent runs */}
@@ -111,7 +101,7 @@ export default async function UsagePage() {
         </div>
 
         {/* Upgrade CTA if >60% */}
-        {tokensPercent > 60 && plan !== "enterprise" && (
+        {creditsPercent > 60 && plan !== "enterprise" && (
           <div className="card flex flex-col justify-between" style={{ borderColor: "rgba(124,58,237,0.4)" }}>
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp size={16} style={{ color: "var(--accent-light)" }} />
@@ -140,7 +130,7 @@ export default async function UsagePage() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm">{a.runs} exécutions</p>
-                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>{a.tokens.toLocaleString("fr-FR")} tokens</p>
+                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>{a.credits.toLocaleString("fr-FR")} crédits</p>
                 </div>
               </div>
             ))}

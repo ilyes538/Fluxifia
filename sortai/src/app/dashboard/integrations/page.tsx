@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { IntegrationCard } from "@/components/dashboard/IntegrationCard";
 
-export const metadata = { title: "Intégrations" };
+export const metadata = { title: "Agents & Intégrations" };
 
 const INTEGRATION_CATALOG = [
   {

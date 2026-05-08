@@ -3,8 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { PLANS } from "@/lib/utils";
-import type { PlanKey } from "@/lib/utils";
+import { isUnlimited } from "@/lib/limits";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -32,15 +31,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
   }
 
-  // Check plan limits
-  if (enabled) {
+  // Check plan limits (skip for admin/owner)
+  if (enabled && !isUnlimited(session.user.email, session.user.role)) {
     const sub = await prisma.subscription.findUnique({ where: { orgId } });
-    const plan = (sub?.plan ?? "free") as PlanKey;
-    const maxAgents = PLANS[plan]?.agents ?? 1;
+    const plan = (sub?.plan ?? "free");
+    const maxAgents = plan === "enterprise" ? Infinity : (plan === "pro" ? 10 : plan === "starter" ? 3 : 1);
     const activeCount = await prisma.agent.count({ where: { orgId, enabled: true } });
-    if (maxAgents !== -1 && activeCount >= maxAgents) {
+    if (maxAgents !== Infinity && activeCount >= maxAgents) {
       return NextResponse.json({ error: `Limite du plan ${plan} atteinte` }, { status: 403 });
     }
+  }
+
+  // Upsert: évite les doublons d'agents du même type
+  const existing = await prisma.agent.findFirst({ where: { orgId, type } });
+  if (existing) {
+    const updated = await prisma.agent.update({
+      where: { id: existing.id },
+      data: { enabled, systemPrompt },
+    });
+    return NextResponse.json(updated);
   }
 
   const agent = await prisma.agent.create({
@@ -65,13 +74,13 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Agent non trouvé" }, { status: 404 });
   }
 
-  // Check plan limits when enabling
-  if (enabled && !agent.enabled) {
+  // Check plan limits when enabling (skip for admin/owner)
+  if (enabled && !agent.enabled && !isUnlimited(session.user.email, session.user.role)) {
     const sub = await prisma.subscription.findUnique({ where: { orgId } });
-    const plan = (sub?.plan ?? "free") as PlanKey;
-    const maxAgents = PLANS[plan]?.agents ?? 1;
+    const plan = (sub?.plan ?? "free");
+    const maxAgents = plan === "enterprise" ? Infinity : (plan === "pro" ? 10 : plan === "starter" ? 3 : 1);
     const activeCount = await prisma.agent.count({ where: { orgId, enabled: true } });
-    if (maxAgents !== -1 && activeCount >= maxAgents) {
+    if (maxAgents !== Infinity && activeCount >= maxAgents) {
       return NextResponse.json({ error: `Limite du plan ${plan} atteinte` }, { status: 403 });
     }
   }

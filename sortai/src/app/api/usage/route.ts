@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getMonthlyTokensUsed, getOrgPlan, PLAN_LIMITS } from "@/lib/limits";
+import { getMonthlyCreditsUsed, getOrgPlan, PLAN_LIMITS } from "@/lib/limits";
 import { prisma } from "@/lib/db";
 
 export async function GET() {
@@ -14,14 +14,13 @@ export async function GET() {
 
   const plan = await getOrgPlan(orgId);
   const limits = PLAN_LIMITS[plan];
-  const tokensUsed = await getMonthlyTokensUsed(orgId);
+  const creditsUsed = await getMonthlyCreditsUsed(orgId);
 
   const start = new Date();
   start.setDate(1);
   start.setHours(0, 0, 0, 0);
 
-  const [emailsProcessed, agentRuns, activeAgents] = await Promise.all([
-    prisma.emailLog.count({ where: { orgId, createdAt: { gte: start } } }),
+  const [agentRuns, activeAgents] = await Promise.all([
     prisma.agentRun.count({ where: { agent: { orgId }, createdAt: { gte: start } } }),
     prisma.agent.count({ where: { orgId, enabled: true } }),
   ]);
@@ -30,11 +29,9 @@ export async function GET() {
     plan,
     limits,
     usage: {
-      tokensUsed,
-      tokensLimit: limits.tokensPerMonth,
-      tokensPercent: limits.tokensPerMonth === Infinity ? 0 : Math.round((tokensUsed / limits.tokensPerMonth) * 100),
-      emailsProcessed,
-      emailsLimit: limits.emailsPerMonth,
+      creditsUsed,
+      creditsLimit: limits.creditsPerMonth,
+      creditsPercent: limits.creditsPerMonth === Infinity ? 0 : Math.round((creditsUsed / limits.creditsPerMonth) * 100),
       agentRuns,
       activeAgents,
       agentsLimit: limits.agents,

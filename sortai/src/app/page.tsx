@@ -65,7 +65,7 @@ export default function LandingPage() {
               <div className="w-3 h-3 rounded-full bg-red-500/70" />
               <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
               <div className="w-3 h-3 rounded-full bg-green-500/70" />
-              <span className="ml-2 text-xs" style={{ color: "var(--text-muted)" }}>sortai.app/dashboard</span>
+              <span className="ml-2 text-xs" style={{ color: "var(--text-muted)" }}>fluxifia.com/dashboard</span>
             </div>
             <div className="p-6 grid grid-cols-3 gap-4">
               {[

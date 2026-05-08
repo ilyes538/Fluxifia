@@ -8,9 +8,8 @@ import { cn } from "@/lib/utils";
 
 const nav = [
   { href: "/dashboard", label: "Vue d'ensemble", icon: LayoutDashboard },
-  { href: "/dashboard/agents", label: "Agents IA", icon: Bot },
-  { href: "/dashboard/emails", label: "Emails IA", icon: Mail },
-  { href: "/dashboard/integrations", label: "Intégrations", icon: Plug },
+  { href: "/dashboard/emails", label: "Agent Email", icon: Mail },
+  { href: "/dashboard/integrations", label: "Agents & Intégrations", icon: Plug },
   { href: "/dashboard/usage", label: "Utilisation", icon: Zap },
   { href: "/dashboard/billing", label: "Abonnement", icon: CreditCard },
   { href: "/dashboard/settings/team", label: "Équipe", icon: Users },
