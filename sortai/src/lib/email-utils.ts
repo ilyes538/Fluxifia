@@ -18,6 +18,7 @@ export interface FetchedMessage {
 
 export interface AnalyzedEmail {
   id: string;
+  gmailId: string;
   type: string;
   from: string;
   subject: string;

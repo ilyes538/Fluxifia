@@ -21,6 +21,7 @@ interface MessageInput {
 
 interface AnalyzedEmail {
   id: string;
+  gmailId: string;
   type: string;
   from: string;
   subject: string;
@@ -134,6 +135,7 @@ export async function POST(req: NextRequest) {
         const msg = messages[i];
         analyzedEmails.push({
           id: `email_${String(i + 1).padStart(3, "0")}`,
+          gmailId: msg.gmailId,
           type: i % 3 === 0 ? "Prospect/Client" : i % 3 === 1 ? "Newsletter/Promotion" : "Information",
           from: msg.from,
           subject: msg.subject,
@@ -150,6 +152,7 @@ export async function POST(req: NextRequest) {
             const result = await analyzeEmail(msg, apiKey);
             return {
               id: `email_${String(i + idx + 1).padStart(3, "0")}`,
+              gmailId: msg.gmailId,
               type: result.type,
               from: msg.from,
               subject: msg.subject,

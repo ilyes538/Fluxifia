@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { decryptWithPrefix } from "@/lib/encryption";
-import { sleep } from "@/lib/sleep";
 import { EmailDashboard } from "@/components/dashboard/EmailDashboard";
 import type { MonthlyStats } from "@/lib/email-utils";
 
@@ -11,9 +10,6 @@ export const metadata = { title: "Agent Email" };
 export default async function EmailsPage() {
   const session = await getServerSession(authOptions);
   const orgId = session!.user.orgId;
-
-  // Artificial delay to show the loader animation
-  await sleep(2500);
 
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
