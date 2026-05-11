@@ -73,8 +73,8 @@ export default async function BillingPage() {
       {/* Plan comparison */}
       <div>
         <h2 className="text-lg font-semibold mb-4">Changer de plan</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {(Object.entries(PLANS) as [keyof typeof PLANS, typeof PLANS[keyof typeof PLANS]][]).map(([key, p]) => {
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {(Object.entries(PLANS).filter(([key]) => key !== "free") as [keyof typeof PLANS, typeof PLANS[keyof typeof PLANS]][]).map(([key, p]) => {
             const isCurrent = key === currentPlan;
             return (
               <div key={key} className={`card flex flex-col relative ${isCurrent ? "border-purple-500/50" : ""}`}>
@@ -91,6 +91,11 @@ export default async function BillingPage() {
                     </span>
                     {p.price > 0 && <span className="text-xs" style={{ color: "var(--text-muted)" }}>/mois</span>}
                   </div>
+                  {p.annualPrice > 0 && (
+                    <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
+                      Annuel : {p.annualPrice / 100}€ / an
+                    </p>
+                  )}
                 </div>
                 <ul className="space-y-2 flex-1 mb-4">
                   {p.features.map((f) => (

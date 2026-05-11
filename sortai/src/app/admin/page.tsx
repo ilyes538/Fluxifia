@@ -31,7 +31,7 @@ export default async function AdminPage() {
   ]);
 
   const mrr = planBreakdown.reduce((sum, p) => {
-    const prices: Record<string, number> = { free: 0, starter: 49, pro: 99, enterprise: 299 };
+    const prices: Record<string, number> = { free: 0, starter: 49.99, pro: 89.99, enterprise: 112.49 };
     return sum + (prices[p.plan] ?? 0) * p._count.id;
   }, 0);
 

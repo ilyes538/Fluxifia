@@ -22,7 +22,7 @@ export function BillingActions({ plan, targetPlan, hasStripe, orgId, userEmail, 
     const res = await fetch("/api/billing/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orgId, userEmail, orgName, targetPlan: targetPlan ?? plan }),
+      body: JSON.stringify({ orgId, userEmail, orgName, targetPlan: targetPlan ?? (plan === "free" ? "starter" : plan) }),
     });
     const data = await res.json();
     if (data.url) window.location.href = data.url;

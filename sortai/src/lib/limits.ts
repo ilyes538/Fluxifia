@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/db";
 
 export const PLAN_LIMITS = {
-  free:       { agents: 1, tokensPerMonth: 10_000, creditsPerMonth: 100 },
-  starter:    { agents: 3, tokensPerMonth: 100_000,  creditsPerMonth: 100 },
-  pro:        { agents: 10, tokensPerMonth: 500_000, creditsPerMonth: 1_000 },
-  enterprise: { agents: Infinity, tokensPerMonth: Infinity, creditsPerMonth: Infinity },
+  free:       { agents: 1, tokensPerMonth: 0, creditsPerMonth: 0 },
+  starter:    { agents: 3, tokensPerMonth: 300_000, creditsPerMonth: 3_000 },
+  pro:        { agents: 6, tokensPerMonth: 700_000, creditsPerMonth: 7_000 },
+  enterprise: { agents: 12, tokensPerMonth: 1_500_000, creditsPerMonth: 15_000 },
 } as const;
 
 export type Plan = keyof typeof PLAN_LIMITS;
