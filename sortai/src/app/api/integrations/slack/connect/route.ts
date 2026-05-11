@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession, encodeState, getAppUrl } from "@/lib/oauth";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const session = await requireSession();
   if (!session) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });

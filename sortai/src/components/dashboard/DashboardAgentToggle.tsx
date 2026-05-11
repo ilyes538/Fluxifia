@@ -11,10 +11,9 @@ interface Props {
   orgId: string;
   hasRequiredIntegration: boolean;
   canEnable: boolean;
-  plan: string;
 }
 
-export function DashboardAgentToggle({ agent, catalog, orgId, hasRequiredIntegration, canEnable, plan }: Props) {
+export function DashboardAgentToggle({ agent, catalog, orgId, hasRequiredIntegration, canEnable }: Props) {
   const router = useRouter();
   const [enabled, setEnabled] = useState(agent?.enabled ?? false);
   const [loading, setLoading] = useState(false);

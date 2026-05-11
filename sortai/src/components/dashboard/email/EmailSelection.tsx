@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, ArrowLeft, AlertCircle, Sparkles, CheckCircle2 } from "lucide-react";
+import { Mail, ArrowLeft, Sparkles, CheckCircle2 } from "lucide-react";
 import { EmailPreview, parseSender, formatDate, avatarGradient } from "@/lib/email-utils";
 
 export function EmailSelection({

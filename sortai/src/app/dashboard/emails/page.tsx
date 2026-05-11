@@ -1,13 +1,19 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { decryptWithPrefix } from "@/lib/encryption";
+import { sleep } from "@/lib/sleep";
 import { EmailDashboard } from "@/components/dashboard/EmailDashboard";
+import type { MonthlyStats } from "@/lib/email-utils";
 
 export const metadata = { title: "Agent Email" };
 
 export default async function EmailsPage() {
   const session = await getServerSession(authOptions);
   const orgId = session!.user.orgId;
+
+  // Artificial delay to show the loader animation
+  await sleep(2500);
 
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
@@ -38,6 +44,7 @@ export default async function EmailsPage() {
             stats: true,
             createdAt: true,
             tokenCost: true,
+            gmailEmail: true,
           },
         })
       : [],
@@ -56,7 +63,7 @@ export default async function EmailsPage() {
   for (const report of reports) {
     totalEmails += report.totalEmails;
     try {
-      const stats = JSON.parse(report.stats) as {
+      const stats = JSON.parse(decryptWithPrefix(report.stats)) as {
         prospectClient?: number;
         interne?: number;
         newsletterPromotion?: number;
@@ -73,7 +80,10 @@ export default async function EmailsPage() {
     }
   }
 
-  const monthlyStats = {
+  // Accounts with reports
+  const gmailAccounts = Array.from(new Set(reports.map((r) => r.gmailEmail).filter(Boolean))) as string[];
+
+  const monthlyStats: MonthlyStats = {
     reportsCount: reports.length,
     totalEmails,
     typeBreakdown,
@@ -95,10 +105,12 @@ export default async function EmailsPage() {
           createdAt: r.createdAt.toISOString(),
           period: r.period,
           totalEmails: r.totalEmails,
-          summary: r.summary,
+          summary: decryptWithPrefix(r.summary),
           tokenCost: r.tokenCost,
-          stats: r.stats,
+          stats: decryptWithPrefix(r.stats),
+          gmailEmail: r.gmailEmail,
         }))}
+        gmailAccounts={gmailAccounts}
       />
     </div>
   );

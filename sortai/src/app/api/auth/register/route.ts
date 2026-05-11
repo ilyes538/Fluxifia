@@ -15,7 +15,37 @@ const schema = z.object({
   size: z.string().optional(),
 });
 
+// Simple in-memory rate limiter for registration
+const ipAttempts = new Map<string, { count: number; resetAt: number }>();
+const MAX_REGISTRATIONS_PER_IP = 3;
+const WINDOW_MS = 24 * 60 * 60 * 1000;
+
+function getClientIp(req: NextRequest): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  return forwarded?.split(",")[0]?.trim() ?? "unknown";
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const record = ipAttempts.get(ip);
+  if (!record || now > record.resetAt) {
+    ipAttempts.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    return { allowed: true, remaining: MAX_REGISTRATIONS_PER_IP - 1 };
+  }
+  if (record.count >= MAX_REGISTRATIONS_PER_IP) {
+    return { allowed: false, remaining: 0 };
+  }
+  record.count++;
+  return { allowed: true, remaining: MAX_REGISTRATIONS_PER_IP - record.count };
+}
+
 export async function POST(req: NextRequest) {
+  const clientIp = getClientIp(req);
+  const rateLimit = checkRateLimit(clientIp);
+  if (!rateLimit.allowed) {
+    return NextResponse.json({ error: "Trop de tentatives. Réessayez demain." }, { status: 429 });
+  }
+
   const body = await req.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

@@ -3,6 +3,7 @@ import { authOptions } from "./auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
+import { encrypt, decryptToken } from "./encryption";
 
 // ── Session & CSRF ──────────────────────────────────────────────
 
@@ -81,21 +82,24 @@ export async function getValidAccessToken(integrationId: string): Promise<string
   const integration = await prisma.integration.findUnique({ where: { id: integrationId } });
   if (!integration?.accessToken) throw new Error("Intégration non connectée");
 
+  const accessToken = decryptToken(integration.accessToken);
+
   if (integration.expiresAt && integration.expiresAt > new Date(Date.now() + 5 * 60 * 1000)) {
-    return integration.accessToken;
+    return accessToken;
   }
 
   if (!integration.refreshToken) throw new Error("Refresh token manquant — reconnectez l'intégration");
 
+  const refreshToken = decryptToken(integration.refreshToken);
   const refreshed = integration.type === "gmail"
-    ? await refreshGoogleToken(integration.refreshToken)
+    ? await refreshGoogleToken(refreshToken)
     : integration.type === "outlook"
-    ? await refreshMicrosoftToken(integration.refreshToken)
+    ? await refreshMicrosoftToken(refreshToken)
     : (() => { throw new Error(`Refresh non supporté pour ${integration.type}`); })();
 
   await prisma.integration.update({
     where: { id: integrationId },
-    data: { accessToken: refreshed.accessToken, expiresAt: refreshed.expiresAt },
+    data: { accessToken: encrypt(refreshed.accessToken), expiresAt: refreshed.expiresAt },
   });
 
   return refreshed.accessToken;

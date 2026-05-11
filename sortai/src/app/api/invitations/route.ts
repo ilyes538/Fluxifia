@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
   // Store invite as a session with a special prefix
   // In production: create an Invitation model and send email
-  const invite = await prisma.session.create({
+  await prisma.session.create({
     data: {
       userId: session!.user.id,
       token: `invite_${token}_${orgId}_${role}_${email}`,

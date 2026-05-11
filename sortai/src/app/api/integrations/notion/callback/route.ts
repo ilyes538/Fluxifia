@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { decodeState, validateOrgAccess, getAppUrl } from "@/lib/oauth";
+import { encrypt } from "@/lib/encryption";
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
@@ -52,12 +53,12 @@ export async function GET(req: NextRequest) {
     create: {
       orgId, type: "notion", name: "Notion",
       connected: true,
-      accessToken: data.access_token,
+      accessToken: encrypt(data.access_token),
       metadata: JSON.stringify({ workspace: data.workspace_name, name: data.owner?.user?.name }),
     },
     update: {
       connected: true,
-      accessToken: data.access_token,
+      accessToken: encrypt(data.access_token),
       metadata: JSON.stringify({ workspace: data.workspace_name }),
     },
   });

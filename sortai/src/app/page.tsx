@@ -1,11 +1,16 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import {
   Bot, Mail, Slack, BookOpen, Calendar, Users, Check, ArrowRight,
   Zap, Shield, BarChart3, Star,
 } from "lucide-react";
 import { PLANS } from "@/lib/utils";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const session = await getServerSession(authOptions);
+  if (session) redirect("/dashboard");
   return (
     <div className="min-h-screen" style={{ background: "var(--background)" }}>
       {/* Nav */}

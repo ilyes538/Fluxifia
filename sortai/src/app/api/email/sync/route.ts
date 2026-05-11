@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getValidAccessToken } from "@/lib/oauth";
+import { hashMessageId } from "@/lib/encryption";
 
 interface GmailMessage {
   id: string;
@@ -29,7 +30,7 @@ interface FetchedEmail {
 }
 
 // Fetch emails from Gmail — returns preview + full data without storing in DB
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
@@ -64,49 +65,68 @@ export async function POST(req: NextRequest) {
       console.error("Failed to fetch Gmail profile:", e);
     }
 
-    // Parse existing metadata
-    let meta: Record<string, unknown> = {};
-    try {
-      meta = JSON.parse(integration.metadata || "{}") as Record<string, unknown>;
-    } catch { /* ignore */ }
-
     // 2. Determine sync window
-    let query = "newer_than:1d";
+    let query = "newer_than:1d in:inbox";
 
-    if (!currentGmailEmail) {
-      // Can't verify account → safe fallback to 24h
-      query = "newer_than:1d in:inbox";
-    } else if (!integration.gmailEmail || integration.gmailEmail !== currentGmailEmail) {
-      // Different account (or first time we track it) → start from 24h
-      query = "newer_than:1d in:inbox";
-    } else {
-      // Same account → use last fetch time if available
-      const lastFetchAt = meta.lastFetchAt ? new Date(meta.lastFetchAt as string) : null;
-      if (lastFetchAt && !isNaN(lastFetchAt.getTime())) {
-        const after = Math.floor(lastFetchAt.getTime() / 1000);
-        query = `after:${after} in:inbox`;
-      }
+    if (currentGmailEmail && integration.gmailEmail === currentGmailEmail) {
+      // Same account → use last report date, capped at 7 days
+      const lastReport = await prisma.report.findFirst({
+        where: { orgId, gmailEmail: currentGmailEmail },
+        orderBy: { createdAt: "desc" },
+      });
+
+      const fallback24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const maxLookback = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      const syncSince = lastReport?.createdAt
+        ? (lastReport.createdAt > maxLookback ? lastReport.createdAt : maxLookback)
+        : fallback24h;
+
+      const after = Math.floor(syncSince.getTime() / 1000);
+      query = `after:${after} in:inbox`;
     }
 
     // 3. Fetch emails from Gmail
     const listRes = await fetch(
-      `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50&q=${encodeURIComponent(query)}`,
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=500&q=${encodeURIComponent(query)}`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
 
     if (!listRes.ok) {
       const errText = await listRes.text().catch(() => "unknown");
       console.error("Gmail API list error:", listRes.status, errText);
-      return NextResponse.json({ error: "Erreur Gmail API", details: errText }, { status: 502 });
+      let message = "Erreur Gmail API";
+      if (listRes.status === 401) message = "Session Gmail expirée. Reconnectez votre compte.";
+      else if (listRes.status === 403) message = "Accès Gmail refusé. Vérifiez les permissions.";
+      else if (listRes.status === 429) message = "Trop de requêtes Gmail. Réessayez dans quelques minutes.";
+      else if (listRes.status >= 500) message = "Gmail est temporairement indisponible. Réessayez plus tard.";
+      return NextResponse.json({ error: message, details: errText }, { status: 502 });
     }
 
     const listData = await listRes.json();
     const messages: GmailMessage[] = listData.messages ?? [];
 
+    // 4. Load already-processed message hashes for this account
+    const processedHashes = new Set<string>();
+    if (currentGmailEmail) {
+      const previousReports = await prisma.report.findMany({
+        where: { orgId, gmailEmail: currentGmailEmail },
+        select: { processedMessageHashes: true },
+      });
+      for (const report of previousReports) {
+        for (const h of report.processedMessageHashes) {
+          processedHashes.add(h);
+        }
+      }
+    }
+
     const preview: EmailPreview[] = [];
     const fullMessages: FetchedEmail[] = [];
 
     for (const msg of messages) {
+      // Skip already-processed emails (hash match)
+      if (processedHashes.has(hashMessageId(msg.id))) continue;
+
       try {
         const msgRes = await fetch(
           `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=full`,
@@ -157,18 +177,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. Update integration: lastFetchAt + gmailEmail
+    // 5. Update integration gmailEmail if needed (no lastFetchAt update here)
     try {
-      meta.lastFetchAt = new Date().toISOString();
-      await prisma.integration.update({
-        where: { id: integration.id },
-        data: {
-          metadata: JSON.stringify(meta),
-          gmailEmail: currentGmailEmail ?? integration.gmailEmail,
-        },
-      });
+      if (currentGmailEmail && integration.gmailEmail !== currentGmailEmail) {
+        await prisma.integration.update({
+          where: { id: integration.id },
+          data: { gmailEmail: currentGmailEmail },
+        });
+      }
     } catch (e) {
-      console.error("Failed to update integration after sync:", e);
+      console.error("Failed to update integration gmailEmail:", e);
     }
 
     return NextResponse.json({

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { decryptWithPrefix } from "@/lib/encryption";
 
 export async function GET() {
   try {
@@ -26,7 +27,11 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ reports });
+    const decryptedReports = reports.map((r) => ({
+      ...r,
+      summary: decryptWithPrefix(r.summary),
+    }));
+    return NextResponse.json({ reports: decryptedReports });
   } catch (err) {
     console.error("Reports list error:", err);
     const message = err instanceof Error ? err.message : "Erreur interne";

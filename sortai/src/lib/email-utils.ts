@@ -48,6 +48,7 @@ export interface HistoryItem {
   summary: string;
   tokenCost: number;
   stats: string;
+  gmailEmail: string | null;
 }
 
 export interface MonthlyStats {

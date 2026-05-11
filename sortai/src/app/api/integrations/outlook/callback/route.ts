@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { decodeState, validateOrgAccess, getAppUrl } from "@/lib/oauth";
+import { encrypt } from "@/lib/encryption";
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
@@ -56,17 +57,19 @@ export async function GET(req: NextRequest) {
     create: {
       orgId, type: "outlook", name: "Outlook",
       connected: true,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
+      accessToken: encrypt(tokens.access_token),
+      refreshToken: tokens.refresh_token ? encrypt(tokens.refresh_token) : undefined,
       expiresAt: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null,
       scopes: tokens.scope,
+      gmailEmail: userInfo.mail ?? userInfo.userPrincipalName,
       metadata: JSON.stringify({ email: userInfo.mail ?? userInfo.userPrincipalName }),
     },
     update: {
       connected: true,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token ?? undefined,
+      accessToken: encrypt(tokens.access_token),
+      refreshToken: tokens.refresh_token ? encrypt(tokens.refresh_token) : undefined,
       expiresAt: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : undefined,
+      gmailEmail: userInfo.mail ?? userInfo.userPrincipalName,
       metadata: JSON.stringify({ email: userInfo.mail ?? userInfo.userPrincipalName }),
     },
   });

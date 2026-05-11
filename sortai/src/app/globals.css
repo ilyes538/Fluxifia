@@ -137,3 +137,15 @@ body {
 
 /* Toggle switch override */
 [data-state="checked"] { background-color: var(--accent) !important; }
+
+/* Dropdown fade animation */
+@keyframes fadeInDropdown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

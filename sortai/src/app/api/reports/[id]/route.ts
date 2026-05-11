@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { decryptWithPrefix } from "@/lib/encryption";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -21,13 +22,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: "Compte rendu introuvable" }, { status: 404 });
     }
 
+    const contentPlain = decryptWithPrefix(report.content);
+    const statsPlain = decryptWithPrefix(report.stats);
+    const summaryPlain = decryptWithPrefix(report.summary);
+
     let emails = [];
     let stats = {};
     try {
-      emails = JSON.parse(report.content);
+      emails = JSON.parse(contentPlain);
     } catch { /* ignore */ }
     try {
-      stats = JSON.parse(report.stats);
+      stats = JSON.parse(statsPlain);
     } catch { /* ignore */ }
 
     return NextResponse.json({
@@ -36,7 +41,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       period: report.period,
       totalEmails: report.totalEmails,
       stats,
-      summary: report.summary,
+      summary: summaryPlain,
       emails,
       tokenCost: report.tokenCost,
     });

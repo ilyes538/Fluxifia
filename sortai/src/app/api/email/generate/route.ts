@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getValidAccessToken } from "@/lib/oauth";
 import { checkActionCredits, AGENT_CREDIT_COSTS, isUnlimited } from "@/lib/limits";
+import { encryptWithPrefix, hashMessageId } from "@/lib/encryption";
 import OpenAI from "openai";
 
 interface MessageInput {
@@ -159,7 +160,7 @@ export async function POST(req: NextRequest) {
             };
           })
         );
-        analyzedEmails.push(...batchResults.map(({ tokensUsed, ...rest }) => rest));
+        analyzedEmails.push(...batchResults.map(({ tokensUsed: _tokensUsed, ...rest }) => rest));
         totalTokens += batchResults.reduce((sum, r) => sum + r.tokensUsed, 0);
       }
     }
@@ -187,10 +188,12 @@ export async function POST(req: NextRequest) {
         orgId,
         period: "24h",
         totalEmails: analyzedEmails.length,
-        stats: JSON.stringify(stats),
-        summary,
-        content: JSON.stringify(analyzedEmails),
+        stats: encryptWithPrefix(JSON.stringify(stats)),
+        summary: encryptWithPrefix(summary),
+        content: encryptWithPrefix(JSON.stringify(analyzedEmails)),
         tokenCost: totalTokens,
+        gmailEmail: integration.gmailEmail,
+        processedMessageHashes: messages.map((m) => hashMessageId(m.gmailId)),
       },
     });
 

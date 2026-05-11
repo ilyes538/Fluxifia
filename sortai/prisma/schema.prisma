@@ -131,16 +131,18 @@ model Subscription {
 }
 
 model Report {
-  id          String   @id @default(cuid())
-  orgId       String
-  period      String
-  totalEmails Int
-  stats       String   @default("{}")
-  summary     String
-  content     String
-  tokenCost   Int      @default(0)
-  createdAt   DateTime @default(now())
-  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  id                  String   @id @default(cuid())
+  orgId               String
+  period              String
+  totalEmails         Int
+  stats               String   @default("{}")
+  summary             String
+  content             String
+  tokenCost           Int      @default(0)
+  gmailEmail          String?  // Compte Gmail ayant généré ce rapport
+  processedMessageHashes String[] @default([]) // Hash HMAC des IDs Gmail traités
+  createdAt           DateTime @default(now())
+  org                 Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 }
 
 model EmailLog {

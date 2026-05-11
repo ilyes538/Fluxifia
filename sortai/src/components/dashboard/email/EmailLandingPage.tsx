@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, Plug, BarChart3, CheckCircle2, Sparkles, Bot, Send } from "lucide-react";
+import { Mail, Plug, BarChart3, CheckCircle2, Sparkles } from "lucide-react";
 import { MockupBrowser } from "./MockupBrowser";
 
 function DashboardMockup() {

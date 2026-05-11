@@ -36,6 +36,7 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           orgId: user.orgId,
           orgName: user.organization?.name ?? null,
+          emailVerified: user.emailVerified,
         };
       },
     }),
@@ -43,10 +44,12 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = (user as { role?: string }).role;
-        token.orgId = (user as { orgId?: string | null }).orgId;
-        token.orgName = (user as { orgName?: string | null }).orgName;
+        const u = user as import("next-auth").User;
+        token.id = u.id as string;
+        token.role = u.role ?? "";
+        token.orgId = u.orgId ?? null;
+        token.orgName = u.orgName ?? null;
+        token.emailVerified = u.emailVerified ?? false;
       }
       return token;
     },
@@ -56,6 +59,7 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string;
         session.user.orgId = token.orgId as string | null;
         session.user.orgName = token.orgName as string | null;
+        session.user.emailVerified = token.emailVerified as boolean;
       }
       return session;
     },
@@ -67,6 +71,7 @@ declare module "next-auth" {
     role?: string;
     orgId?: string | null;
     orgName?: string | null;
+    emailVerified?: boolean;
   }
   interface Session {
     user: {
@@ -76,6 +81,7 @@ declare module "next-auth" {
       role: string;
       orgId: string | null;
       orgName: string | null;
+      emailVerified: boolean;
     };
   }
 }
@@ -86,5 +92,6 @@ declare module "next-auth/jwt" {
     role: string;
     orgId: string | null;
     orgName: string | null;
+    emailVerified: boolean;
   }
 }

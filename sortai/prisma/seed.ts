@@ -19,6 +19,7 @@ async function main() {
       email: "admin@fluxifia.com",
       password: hashedPassword,
       role: "owner",
+      emailVerified: true,
       orgId: org.id,
     },
   });

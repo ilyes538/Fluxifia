@@ -6,11 +6,11 @@ const g = globalThis as Record<string, unknown>;
 if (g.localStorage && typeof (g.localStorage as Storage).getItem !== "function") {
   const map = new Map<string, string>();
   const store: Storage = {
-    getItem: (key) => map.get(String(key)) ?? null,
-    setItem: (key, value) => map.set(String(key), String(value)),
-    removeItem: (key) => map.delete(String(key)),
-    clear: () => map.clear(),
-    key: (index) => Array.from(map.keys())[index] ?? null,
+    getItem: (key: string) => map.get(key) ?? null,
+    setItem: (key: string, value: string) => { map.set(key, value); },
+    removeItem: (key: string) => { map.delete(key); },
+    clear: () => { map.clear(); },
+    key: (index: number) => Array.from(map.keys())[index] ?? null,
     get length() {
       return map.size;
     },

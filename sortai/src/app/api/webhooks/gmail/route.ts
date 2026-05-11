@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { runAgent } from "@/lib/anthropic";
 import { checkTokenLimit } from "@/lib/limits";
 
 // Gmail Push Notifications webhook

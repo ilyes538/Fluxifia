@@ -154,7 +154,6 @@ export default async function DashboardPage() {
                 orgId={orgId ?? ""}
                 hasRequiredIntegration={hasRequired}
                 canEnable={canEnable}
-                plan={plan}
               />
             );
           })}
