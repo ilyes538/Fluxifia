@@ -21,6 +21,8 @@ Remplissez au minimum :
 ```
 DATABASE_URL="file:./dev.db"
 NEXTAUTH_SECRET="votre-secret-32-chars"
+NEXTAUTH_URL="http://localhost:3000"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
@@ -56,8 +58,9 @@ stripe listen --forward-to localhost:3000/api/billing/webhook
 
 ### Outlook / Microsoft 365
 1. Azure Portal → App registrations → Nouvelle inscription
-2. Ajouter `http://localhost:3000/api/integrations/outlook/callback` comme redirect URI
-3. Ajouter les permissions : Mail.ReadWrite, Mail.Send
+2. Ajouter `http://localhost:3000/api/auth/callback/azure-ad` comme redirect URI pour la connexion Microsoft
+3. Ajouter `http://localhost:3000/api/integrations/outlook/callback` comme redirect URI pour l'intégration Outlook
+4. Ajouter les permissions : Mail.ReadWrite, Mail.Send, Calendars.ReadWrite, offline_access
 
 ### Slack
 1. api.slack.com → Create New App

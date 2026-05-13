@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bot, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Bot, Eye, EyeOff, Loader2, Mail } from "lucide-react";
 import { LogoLoader } from "@/components/LogoLoader";
 
 export default function LoginPage() {
@@ -15,6 +15,17 @@ export default function LoginPage() {
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [microsoftLoading, setMicrosoftLoading] = useState(false);
+
+  useEffect(() => {
+    const authError = new URLSearchParams(window.location.search).get("error");
+
+    if (authError === "OAuthCallback") {
+      setError("Connexion Microsoft impossible. Vérifiez le secret client Azure AD configuré dans l'application.");
+    } else if (authError) {
+      setError("La connexion a échoué. Veuillez réessayer.");
+    }
+  }, []);
 
   useEffect(() => {
     if (session) router.push("/dashboard");
@@ -53,13 +64,33 @@ export default function LoginPage() {
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #7c3aed, #6366f1)" }}>
               <Bot size={20} className="text-white" />
             </div>
-            <span className="font-bold text-xl">SortAI</span>
+            <span className="font-bold text-xl">Fluxifia</span>
           </Link>
           <h1 className="text-2xl font-bold mb-1">Bon retour 👋</h1>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>Connectez-vous à votre espace</p>
         </div>
 
         <div className="card">
+          <button
+            type="button"
+            onClick={() => {
+              setError("");
+              setMicrosoftLoading(true);
+              signIn("azure-ad", { callbackUrl: "/dashboard" });
+            }}
+            className="btn-secondary w-full flex items-center justify-center gap-2 mb-5"
+            disabled={microsoftLoading}
+          >
+            {microsoftLoading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
+            Continuer avec Microsoft
+          </button>
+
+          <div className="flex items-center gap-3 mb-5">
+            <div className="h-px flex-1" style={{ background: "var(--border)" }} />
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>ou</span>
+            <div className="h-px flex-1" style={{ background: "var(--border)" }} />
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium mb-2">Email</label>

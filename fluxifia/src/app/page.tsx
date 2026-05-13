@@ -251,7 +251,7 @@ export default async function LandingPage() {
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-7 sm:text-lg" style={{ color: "var(--text-muted)" }}>
             Connectez vos outils, activez vos agents et gardez le contrôle depuis un tableau de bord clair.
-            SortAI traite l'information entrante, propose les prochaines actions et suit l'usage de chaque équipe.
+            SortAI traite l&apos;information entrante, propose les prochaines actions et suit l&apos;usage de chaque équipe.
           </p>
           <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
             <Link href="/auth/register" className="btn-primary inline-flex items-center justify-center gap-2 px-7 py-3 text-base">
@@ -276,7 +276,7 @@ export default async function LandingPage() {
             <div>
               <div className="badge badge-gray mb-3">
                 <Bot size={12} />
-                Catalogue d'agents
+                Catalogue d&apos;agents
               </div>
               <h2 className="text-3xl font-bold text-white">Des assistants spécialisés, pas un chatbot générique.</h2>
             </div>
@@ -313,7 +313,7 @@ export default async function LandingPage() {
             </div>
             <h2 className="text-3xl font-bold text-white">Un déploiement simple, pensé pour rester lisible.</h2>
             <p className="mt-4 text-sm leading-6" style={{ color: "var(--text-muted)" }}>
-              L'interface reprend les codes du dashboard : actions courtes, statuts visibles, limites transparentes et
+              L&apos;interface reprend les codes du dashboard : actions courtes, statuts visibles, limites transparentes et
               intégrations au même endroit.
             </p>
           </div>
@@ -340,7 +340,7 @@ export default async function LandingPage() {
             </div>
             <h2 className="text-3xl font-bold text-white">Votre confidentialité est essentielle.</h2>
             <p className="mt-4 text-sm leading-6" style={{ color: "var(--text-muted)" }}>
-              Les mails ne sont pas conservés dans Fluxifia. Ils sont uniquement lus le temps de l'analyse,
+              Les mails ne sont pas conservés dans Fluxifia. Ils sont uniquement lus le temps de l&apos;analyse,
               résumés, filtrés, puis transformés en informations exploitables dans votre espace.
             </p>
           </div>
@@ -365,8 +365,8 @@ export default async function LandingPage() {
             </div>
             <h2 className="text-3xl font-bold text-white">Des packs de crédits simples, pensés pour rendre Scale évident.</h2>
             <p className="mx-auto mt-3 max-w-2xl text-sm leading-6" style={{ color: "var(--text-muted)" }}>
-              Le plan Scale donne 5x plus de crédits que l'Essentiel pour environ 2,25x le prix.
-              C'est le meilleur coût par action dès que le volume devient régulier.
+              Le plan Scale donne 5x plus de crédits que l&apos;Essentiel pour environ 2,25x le prix.
+              C&apos;est le meilleur coût par action dès que le volume devient régulier.
             </p>
           </div>
 

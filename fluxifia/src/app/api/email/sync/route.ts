@@ -114,7 +114,8 @@ export async function POST(_req: NextRequest) {
         select: { processedMessageHashes: true },
       });
       for (const report of previousReports) {
-        for (const h of report.processedMessageHashes) {
+        const hashes = JSON.parse(report.processedMessageHashes) as string[];
+        for (const h of hashes) {
           processedHashes.add(h);
         }
       }

@@ -196,7 +196,7 @@ export async function POST(req: NextRequest) {
         content: encryptWithPrefix(JSON.stringify(analyzedEmails)),
         tokenCost: totalTokens,
         gmailEmail: integration.gmailEmail,
-        processedMessageHashes: messages.map((m) => hashMessageId(m.gmailId)),
+        processedMessageHashes: JSON.stringify(messages.map((m) => hashMessageId(m.gmailId))),
       },
     });
 

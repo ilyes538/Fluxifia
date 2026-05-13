@@ -44,7 +44,7 @@ export default function RegisterPage() {
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #7c3aed, #6366f1)" }}>
               <Bot size={20} className="text-white" />
             </div>
-            <span className="font-bold text-xl">SortAI</span>
+            <span className="font-bold text-xl">Fluxifia</span>
           </Link>
           <h1 className="text-2xl font-bold mb-1">Créer votre compte</h1>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>Gratuit · Aucune carte bancaire</p>

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -140,7 +140,7 @@ model Report {
   content             String
   tokenCost           Int      @default(0)
   gmailEmail          String?  // Compte Gmail ayant généré ce rapport
-  processedMessageHashes String[] @default([]) // Hash HMAC des IDs Gmail traités
+  processedMessageHashes String   @default("[]") // JSON array de hash HMAC des IDs Gmail traites
   createdAt           DateTime @default(now())
   org                 Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 }
